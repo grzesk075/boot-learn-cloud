@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pl.grzesk075.bootlearncloud.model.Grade;
 import pl.grzesk075.bootlearncloud.model.Student;
+import pl.grzesk075.bootlearncloud.repository.GradeRepository;
 import pl.grzesk075.bootlearncloud.repository.StudentRepository;
 
 @RestController
@@ -12,6 +13,9 @@ public class StudentController {
 
     @Autowired
     private StudentRepository studentRepository;
+
+    @Autowired
+    private GradeRepository gradeRepository;
 
     @PostMapping("/addStudent")
     public Long addStudent(@RequestBody Student student) {
@@ -22,12 +26,15 @@ public class StudentController {
 
     @PostMapping("/addGrade/{studentId:[0-9]+}")
     public Long addGrade(@RequestBody Grade grade, @PathVariable Long studentId) {
-
+        Student student = studentRepository.findById(studentId).orElseThrow();
+        grade.setId(null);
+        grade.setStudent(student);
+        gradeRepository.save(grade);
         return grade.getId();
     }
 
     @GetMapping("/getStudent")
     public Student getStudent(@RequestParam Long studentId) {
-        return null;
+        return studentRepository.findById(studentId).orElse(null);
     }
 }

@@ -1,14 +1,21 @@
 package pl.grzesk075.bootlearncloud.model;
 
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+import java.util.List;
 
 @Entity
 @Data
-public class Student {
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @Column(name = "id", nullable = false)
-    private Long id;
+@EqualsAndHashCode(callSuper = true, exclude = "grades")
+@ToString(exclude = "grades", callSuper = true)
+public class Student extends Person {
 
+    @JsonManagedReference
+    @OneToMany(mappedBy = "student")
+    private List<Grade> grades;
 }
