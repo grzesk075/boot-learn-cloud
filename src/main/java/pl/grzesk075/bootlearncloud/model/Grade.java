@@ -20,14 +20,10 @@ public class Grade {
     @Enumerated(EnumType.STRING)
     private Subject subject;
 
-//    @Enumerated(EnumType.STRING)
-//    private Value value;
-//
-//    public enum Value {
-//        A,
-//        B,
-//        C,
-//        D,
-//        E;
-//    }
+    @Enumerated(EnumType.STRING)
+    private GradeValue gradeValue;
+
+    public Long getStudentId() {
+        return student == null ? null : student.getId();
+    }
 }

@@ -4,8 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pl.grzesk075.bootlearncloud.model.Grade;
 import pl.grzesk075.bootlearncloud.model.Student;
+import pl.grzesk075.bootlearncloud.model.Subject;
 import pl.grzesk075.bootlearncloud.repository.GradeRepository;
 import pl.grzesk075.bootlearncloud.repository.StudentRepository;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/student")
@@ -36,5 +39,12 @@ public class StudentController {
     @GetMapping("/getStudent")
     public Student getStudent(@RequestParam Long studentId) {
         return studentRepository.findById(studentId).orElse(null);
+    }
+
+    @GetMapping("/getGrades")
+    public List<Grade> getGrades(@RequestParam(required = false) String studentLastNameFilter,
+                                 @RequestParam(required = false) Subject subjectFilter) {
+
+        return gradeRepository.findBySubjectAndStudentLastName(subjectFilter, studentLastNameFilter);
     }
 }
