@@ -10,14 +10,17 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import pl.grzesk075.bootlearncloud.model.Grade;
+import pl.grzesk075.bootlearncloud.model.GradeValue;
 import pl.grzesk075.bootlearncloud.model.Student;
+import pl.grzesk075.bootlearncloud.model.Subject;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -33,6 +36,9 @@ class BootlearncloudApplicationTests {
 			.firstName("Anna")
 			.lastName("Jasna")
 			.build();
+	public static final String STUDENT_ID_1 = "1";
+
+	public static final String STUDENT_ID_2 = "2";
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -56,9 +62,12 @@ class BootlearncloudApplicationTests {
 	@Test
 	void studentIntegrationTest() throws Exception {
 
-		addStudent(STUDENT_1, "1");
-		addStudent(STUDENT_2, "2");
-		addGrades();
+		addStudent(STUDENT_1, STUDENT_ID_1);
+		addStudent(STUDENT_2, STUDENT_ID_2);
+		addGrade(Subject.MATHEMATICS, GradeValue.C, STUDENT_ID_1, "1");
+		addGrade(Subject.CHEMISTRY, GradeValue.B, STUDENT_ID_1, "2");
+		addGrade(Subject.PHYSICS, GradeValue.A, STUDENT_ID_2, "3");
+		addGrade(Subject.ENGLISH, GradeValue.D, STUDENT_ID_2, "4");
 		getStudents();
 		findGrades();
 	}
@@ -73,12 +82,34 @@ class BootlearncloudApplicationTests {
 				.andExpect(content().string(is(expectedReturnedId)));
 	}
 
-	private void addGrades() {
+	private void addGrade(Subject subject,
+						  GradeValue gradeValue,
+						  String studentId,
+						  String expectedReturnedId) throws Exception {
 
+		Grade grade = Grade.builder().subject(subject).gradeValue(gradeValue).build();
+		mockMvc.perform(post("/student/addGrade/" + studentId)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(grade))
+				)
+				.andExpect(status().isOk())
+				.andExpect(content().string(is(expectedReturnedId)));
 	}
 
-	private void getStudents() {
+	private void getStudents() throws Exception {
+		mockMvc.perform(get("/student/getStudent?studentId=" + STUDENT_ID_1))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("id", is(Integer.valueOf(STUDENT_ID_1))))
+				.andExpect(jsonPath("firstName", is(STUDENT_1.getFirstName())))
+				.andExpect(jsonPath("grades[1].subject", is(Subject.CHEMISTRY.name())))
+				.andExpect(jsonPath("grades[1].gradeValue", is(GradeValue.B.name())));
 
+		mockMvc.perform(get("/student/getStudent?studentId=" + STUDENT_ID_2))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("id", is(Integer.valueOf(STUDENT_ID_2))))
+				.andExpect(jsonPath("firstName", is(STUDENT_2.getFirstName())))
+				.andExpect(jsonPath("grades[1].subject", is(Subject.ENGLISH.name())))
+				.andExpect(jsonPath("grades[1].gradeValue", is(GradeValue.D.name())));
 	}
 
 	private void findGrades() {
