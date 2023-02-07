@@ -112,7 +112,15 @@ class BootlearncloudApplicationTests {
 				.andExpect(jsonPath("grades[1].gradeValue", is(GradeValue.D.name())));
 	}
 
-	private void findGrades() {
-
+	private void findGrades() throws Exception {
+		String uri = String.format(
+				"http://localhost:8080/student/getGrades?subjectFilter=%s&studentLastNameFilter=%s",
+				Subject.MATHEMATICS.name(),
+				STUDENT_1.getLastName());
+		mockMvc.perform(get(uri))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("[0].subject", is(Subject.MATHEMATICS.name())))
+				.andExpect(jsonPath("[0].gradeValue", is(GradeValue.C.name())))
+				.andExpect(jsonPath("length()", is(1)));
 	}
 }
