@@ -16,8 +16,8 @@ import java.util.List;
 public class Student extends Person {
 
     @Builder
-    public Student(String firstName, String lastName) {
-        super(null, firstName, lastName);
+    public Student(Long id, String firstName, String lastName) {
+        super(id, firstName, lastName);
     }
 
     @JsonManagedReference

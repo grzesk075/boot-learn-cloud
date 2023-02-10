@@ -6,16 +6,17 @@ import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 import pl.grzesk075.bootlearncloud.queue.message.GradeStatus;
 
+import static pl.grzesk075.bootlearncloud.queue.Destination.GRADE_STATUS_QUEUE_OUT;
+
 @Component
-public class GradeStatusQueueLogListener {
+public class GradeStatusQueueLogConsumer {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GradeStatusQueueLogListener.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GradeStatusQueueLogConsumer.class);
 
-    @JmsListener(destination = "grade_status_queue_out", containerFactory = "jmsFactory")
+    @JmsListener(destination = GRADE_STATUS_QUEUE_OUT, containerFactory = "jmsFactory")
     public void onGradeStatus(GradeStatus gradeStatus) {
         Long gradeId = gradeStatus.getGrade() != null ? gradeStatus.getGrade().getId() : null;
-        String logMessage = String.format("grade message processed: UUID=%s, saved Grade id=%d, error=%s",
+        LOGGER.debug("grade message processed: UUID={}, saved Grade id={}, error={}",
                 gradeStatus.getUuid(), gradeId, gradeStatus.getError());
-        LOGGER.debug(logMessage);
     }
 }

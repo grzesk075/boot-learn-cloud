@@ -14,6 +14,10 @@ import pl.grzesk075.bootlearncloud.model.Grade;
 import pl.grzesk075.bootlearncloud.model.GradeValue;
 import pl.grzesk075.bootlearncloud.model.Student;
 import pl.grzesk075.bootlearncloud.model.Subject;
+import pl.grzesk075.bootlearncloud.queue.GradeMessageQueueProducer;
+import pl.grzesk075.bootlearncloud.queue.message.GradeMessage;
+
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,9 +40,24 @@ class BootlearncloudApplicationTests {
 			.firstName("Anna")
 			.lastName("Jasna")
 			.build();
-	public static final String STUDENT_ID_1 = "1";
+	private static final String STUDENT_ID_1 = "1";
 
-	public static final String STUDENT_ID_2 = "2";
+	private static final String STUDENT_ID_2 = "2";
+
+	private static final GradeMessage GRADE_MESSAGE_1 = GradeMessage.builder()
+			.uuid(new UUID(73954672L, 6147526725L))
+			.studentId(Long.valueOf(STUDENT_ID_1))
+			.grade(Grade.builder().gradeValue(GradeValue.E).subject(Subject.ENGLISH).build())
+			.build();
+
+	private static final GradeMessage GRADE_MESSAGE_2 = GradeMessage.builder()
+			.uuid(new UUID(54885L, 326578L))
+			.studentId(Long.valueOf(STUDENT_ID_2))
+			.grade(Grade.builder().gradeValue(GradeValue.E).subject(Subject.MATHEMATICS).build())
+			.build();
+
+	@Autowired
+	private GradeMessageQueueProducer gradeMessageQueueProducer;
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -70,6 +89,7 @@ class BootlearncloudApplicationTests {
 		addGrade(Subject.ENGLISH, GradeValue.D, STUDENT_ID_2, "4");
 		getStudents();
 		findGrades();
+		sendGradesToQueue();
 	}
 
 	private void addStudent(Student student, String expectedReturnedId) throws Exception {
@@ -114,7 +134,7 @@ class BootlearncloudApplicationTests {
 
 	private void findGrades() throws Exception {
 		String uri = String.format(
-				"http://localhost:8080/student/getGrades?subjectFilter=%s&studentLastNameFilter=%s",
+				"/student/getGrades?subjectFilter=%s&studentLastNameFilter=%s",
 				Subject.MATHEMATICS.name(),
 				STUDENT_1.getLastName());
 		mockMvc.perform(get(uri))
@@ -122,5 +142,22 @@ class BootlearncloudApplicationTests {
 				.andExpect(jsonPath("[0].subject", is(Subject.MATHEMATICS.name())))
 				.andExpect(jsonPath("[0].gradeValue", is(GradeValue.C.name())))
 				.andExpect(jsonPath("length()", is(1)));
+	}
+
+	private void sendGradesToQueue() throws Exception {
+		gradeMessageQueueProducer.send(GRADE_MESSAGE_1);
+		gradeMessageQueueProducer.send(GRADE_MESSAGE_2);
+
+		Thread.sleep(1000L);
+
+		mockMvc.perform(get("/student/getStudent?studentId=" + STUDENT_ID_1))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("grades[2].subject", is(Subject.ENGLISH.name())))
+				.andExpect(jsonPath("grades[2].gradeValue", is(GradeValue.E.name())));
+
+		mockMvc.perform(get("/student/getStudent?studentId=" + STUDENT_ID_2))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("grades[2].subject", is(Subject.MATHEMATICS.name())))
+				.andExpect(jsonPath("grades[2].gradeValue", is(GradeValue.E.name())));
 	}
 }

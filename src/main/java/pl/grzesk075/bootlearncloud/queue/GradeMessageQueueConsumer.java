@@ -11,8 +11,11 @@ import pl.grzesk075.bootlearncloud.queue.message.GradeStatus;
 import pl.grzesk075.bootlearncloud.repository.GradeRepository;
 import pl.grzesk075.bootlearncloud.repository.StudentRepository;
 
+import static pl.grzesk075.bootlearncloud.queue.Destination.GRADE_MESSAGE_QUEUE_IN;
+import static pl.grzesk075.bootlearncloud.queue.Destination.GRADE_STATUS_QUEUE_OUT;
+
 @Component
-public class GradeMessageQueueListener {
+public class GradeMessageQueueConsumer {
 
     @Autowired
     private StudentRepository studentRepository;
@@ -20,8 +23,8 @@ public class GradeMessageQueueListener {
     @Autowired
     private GradeRepository gradeRepository;
 
-    @JmsListener(destination = "grade_message_queue_in", containerFactory = "jmsFactory")
-    @SendTo("grade_status_queue_out")
+    @JmsListener(destination = GRADE_MESSAGE_QUEUE_IN, containerFactory = "jmsFactory")
+    @SendTo(GRADE_STATUS_QUEUE_OUT)
     public GradeStatus onGrade(GradeMessage gradeMessage) {
         Grade grade = gradeMessage.getGrade();
 
