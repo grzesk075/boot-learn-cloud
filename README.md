@@ -1,7 +1,12 @@
 # bootlearncloud
 
 To build:
-> gradlew.bat clean build --info
+> mvnw.bat clean install
 
-To release with Gradle Release Plugin:
+To release:
+> mvnw.bat release
+
+To build, release with Gradle (deleted):
+> gradlew.bat clean build --info
+> 
 > gradlew.bat release
